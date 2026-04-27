@@ -2,7 +2,7 @@ import { useItinerary } from '../hooks/useItinerary';
 import { MapPin, ExternalLink } from 'lucide-react';
 
 // 여행 데이터는 기존 lib/data.ts 것을 사용한다고 가정합니다.
-import { itinerary } from '../lib/data';
+import { itineraryData as itinerary } from '../lib/data';
 
 export function Itinerary() {
   const { itineraryData, updateItinerary } = useItinerary();
