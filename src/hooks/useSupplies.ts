@@ -6,44 +6,47 @@ export function useSupplies(initialData: SupplyItem[]) {
   const [supplies, setSupplies] = useState<SupplyItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 1. 데이터 불러오기
-  useEffect(() => {
-    async function fetchSupplies() {
-      const { data, error } = await supabase
-        .from('supplies')
-        .select('*')
-        .order('id', { ascending: true });
+  const fetchSupplies = async () => {
+    const { data, error } = await supabase
+      .from('supplies')
+      .select('*')
+      .order('id', { ascending: true });
 
-      if (data && data.length > 0) {
-        setSupplies(data);
-      } else {
-        // 데이터가 없으면 초기 데이터 삽입 (선택 사항)
-        setSupplies(initialData);
-      }
-      setLoading(false);
+    if (data && data.length > 0) {
+      setSupplies(data);
+    } else {
+      setSupplies(initialData);
     }
+    setLoading(false);
+  };
+
+  useEffect(() => {
     fetchSupplies();
   }, []);
 
-  // 2. 상태 업데이트 및 DB 저장
   const toggleItem = async (id: string) => {
     const item = supplies.find(s => s.id === id);
     if (!item) return;
 
-    const newPackedStatus = !item.packed;
+    const newStatus = !item.packed;
 
-    // 화면 먼저 업데이트 (낙관적 업데이트)
-    setSupplies(prev => prev.map(s => s.id === id ? { ...s, packed: newPackedStatus } : s));
+    // 1. 화면 먼저 업데이트 (사용자 경험)
+    setSupplies(prev => prev.map(s => s.id === id ? { ...s, packed: newStatus } : s));
 
-    // Supabase DB 업데이트
+    // 2. DB 업데이트
     const { error } = await supabase
       .from('supplies')
-      .update({ packed: newPackedStatus })
-      .eq('id', id);
+      .upsert({ 
+        id: id, 
+        packed: newStatus,
+        category: item.category,
+        detail: item.detail 
+      });
 
     if (error) {
-      console.error('Error updating DB:', error);
-      // 에러 시 롤백 로직 추가 가능
+      console.error('DB 저장 실패:', error.message);
+      alert('저장에 실패했습니다. 인터넷 연결이나 DB 설정을 확인하세요.');
+      fetchSupplies(); // 실패 시 데이터 원복
     }
   };
 
