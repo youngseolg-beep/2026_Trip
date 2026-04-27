@@ -1,90 +1,105 @@
+import { useState } from 'react';
 import { useItinerary } from '../hooks/useItinerary';
-import { MapPin, ExternalLink, Clock } from 'lucide-react';
-// 데이터 파일에서 실제 변수명인 travelItinerary를 가져옵니다.
+import { MapPin, ExternalLink, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import { travelItinerary } from '../lib/data';
 
 export function Itinerary() {
   const { itineraryData, updateItinerary } = useItinerary();
+  
+  // 현재 어떤 날짜가 펼쳐져 있는지 관리하는 상태 (기본적으로 첫 번째 날짜만 열어둠)
+  const [expandedDays, setExpandedDays] = useState<string[]>([travelItinerary[0].date]);
+
+  const toggleDay = (date: string) => {
+    setExpandedDays(prev => 
+      prev.includes(date) 
+        ? prev.filter(d => d !== date) 
+        : [...prev, date]
+    );
+  };
 
   const handleMapUrlChange = (itemId: string, url: string) => {
-    // Supabase에 해당 아이템의 ID를 기준으로 지도 URL을 저장/업데이트합니다.
     updateItinerary(itemId, { map_url: url });
   };
 
   return (
-    <div className="space-y-10 pb-24">
-      {travelItinerary.map((dayGroup, groupIndex) => (
-        <div key={dayGroup.date} className="relative">
-          {/* 날짜 헤더 */}
-          <div className="sticky top-0 z-10 bg-slate-50/80 backdrop-blur-md py-2 mb-4">
-            <h2 className="text-lg font-black text-[#1d3557] flex items-center gap-2">
-              <span className="bg-[#e9c46a] text-white px-3 py-1 rounded-full text-sm">Day {groupIndex + 1}</span>
-              {dayGroup.date}
-            </h2>
-          </div>
+    <div className="space-y-3 pb-24">
+      {travelItinerary.map((dayGroup, groupIndex) => {
+        const isExpanded = expandedDays.includes(dayGroup.date);
 
-          <div className="space-y-6 ml-4 border-l-2 border-slate-200 pl-6">
-            {dayGroup.items.map((item) => {
-              // DB에서 저장된 지도 URL이 있는지 확인
-              const dbData = itineraryData?.find(d => d.id === item.id);
-              const currentMapUrl = dbData?.map_url || '';
+        return (
+          <div key={dayGroup.date} className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
+            {/* 날짜 헤더 - 클릭 시 토글 */}
+            <button 
+              onClick={() => toggleDay(dayGroup.date)}
+              className="w-full flex items-center justify-between p-5 text-left bg-white active:bg-slate-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="bg-[#e9c46a] text-white text-[10px] font-black px-2 py-1 rounded-full uppercase">
+                  Day {groupIndex + 1}
+                </span>
+                <h2 className="text-md font-bold text-[#1d3557]">{dayGroup.date}</h2>
+              </div>
+              <div className="text-slate-300">
+                {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+              </div>
+            </button>
 
-              return (
-                <div key={item.id} className="relative bg-white p-5 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                  {/* 타임라인 불렛 */}
-                  <div className="absolute -left-[33px] top-6 w-3 h-3 rounded-full bg-slate-300 border-2 border-white" />
-                  
-                  <div className="flex flex-wrap justify-between items-start gap-2 mb-3">
-                    <div className="flex items-center gap-2 text-[#e63946] font-bold text-sm">
-                      <Clock size={14} />
-                      <span>{item.time}</span>
-                    </div>
-                    <span className="bg-slate-100 text-slate-500 px-2 py-1 rounded-lg text-[10px] font-bold uppercase">
-                      {item.location}
-                    </span>
-                  </div>
+            {/* 상세 일정 영역 (펼쳐졌을 때만 보임) */}
+            {isExpanded && (
+              <div className="px-5 pb-5 space-y-6 border-t border-slate-50 pt-5 animate-in fade-in duration-300">
+                {dayGroup.items.map((item) => {
+                  const dbData = itineraryData?.find(d => d.id === item.id);
+                  const currentMapUrl = dbData?.map_url || '';
 
-                  <h3 className="font-bold text-[#1d3557] mb-2 text-lg">{item.title}</h3>
-                  <p className="text-sm text-slate-600 mb-4 leading-relaxed">{item.desc}</p>
-                  
-                  {item.tip && (
-                    <div className="bg-amber-50 p-3 rounded-xl mb-4 text-xs text-amber-700">
-                      <strong>Tip:</strong> {item.tip}
-                    </div>
-                  )}
+                  return (
+                    <div key={item.id} className="relative pl-6 border-l-2 border-slate-100">
+                      {/* 타임라인 점 */}
+                      <div className="absolute -left-[7px] top-1.5 w-3 h-3 rounded-full bg-slate-200 border-2 border-white" />
+                      
+                      <div className="flex items-center gap-2 text-[#e63946] font-bold text-[11px] mb-1">
+                        <Clock size={12} />
+                        <span>{item.time}</span>
+                        <span className="text-slate-300 ml-1">|</span>
+                        <span className="text-slate-400">{item.location}</span>
+                      </div>
 
-                  {/* 지도 입력 영역 */}
-                  <div className="pt-3 border-t border-slate-50">
-                    <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400 mb-2">
-                      <MapPin size={12} />
-                      <span>위치 메모 (Google Map URL)</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <input 
-                        type="text" 
-                        placeholder="링크를 붙여넣으세요"
-                        className="flex-1 text-xs p-2.5 bg-slate-50 rounded-xl outline-none focus:ring-2 ring-[#e9c46a]/30 transition-all"
-                        value={currentMapUrl}
-                        onChange={(e) => handleMapUrlChange(item.id, e.target.value)}
-                      />
-                      {currentMapUrl && (
-                        <a 
-                          href={currentMapUrl} 
-                          target="_blank" 
-                          rel="noreferrer" 
-                          className="p-2.5 bg-[#1d3557] rounded-xl text-white flex items-center justify-center shadow-lg shadow-blue-900/20"
-                        >
-                          <ExternalLink size={14} />
-                        </a>
+                      <h3 className="font-bold text-[#1d3557] text-sm mb-1">{item.title}</h3>
+                      <p className="text-xs text-slate-500 leading-relaxed mb-3">{item.desc}</p>
+                      
+                      {item.tip && (
+                        <div className="bg-amber-50/50 p-2.5 rounded-xl mb-3 text-[10px] text-amber-700 leading-normal">
+                          <span className="font-bold">💡 Tip:</span> {item.tip}
+                        </div>
                       )}
+
+                      {/* 구글맵 입력부 */}
+                      <div className="flex gap-1.5 mt-2">
+                        <input 
+                          type="text" 
+                          placeholder="Google Map URL"
+                          className="flex-1 text-[10px] p-2 bg-slate-50 rounded-lg outline-none focus:ring-1 ring-[#e9c46a]"
+                          value={currentMapUrl}
+                          onChange={(e) => handleMapUrlChange(item.id, e.target.value)}
+                        />
+                        {currentMapUrl && (
+                          <a 
+                            href={currentMapUrl} 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            className="p-2 bg-[#1d3557] rounded-lg text-white"
+                          >
+                            <ExternalLink size={12} />
+                          </a>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            )}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
