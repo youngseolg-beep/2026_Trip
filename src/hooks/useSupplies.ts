@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient'; // 설정하신 클라이언트 경로
+import { supabase } from '../lib/supabaseClient';
 import { SupplyItem } from '../types';
 
 export function useSupplies(initialData: SupplyItem[]) {
