@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useExpenses } from '../hooks/useExpenses';
-import { Plus, Trash2, Calendar } from 'lucide-react';
+import { Plus, Trash2, Calendar, CreditCard } from 'lucide-react';
 
 export function Expenses() {
   const { expenses, addExpense, deleteExpense, loading } = useExpenses();
@@ -12,7 +12,7 @@ export function Expenses() {
     item: '',
     amount: '',
     currency: '유로',
-    payment_method: '카드'
+    payment_method: '트레블월렛' // 기본값 설정
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,7 +68,7 @@ export function Expenses() {
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200 text-[10px] text-slate-500">
               <th className="p-3 font-bold">내역/분류</th>
-              <th className="p-3 font-bold text-right">금액</th>
+              <th className="p-3 font-bold text-right">금액/수단</th>
               <th className="p-3 w-8"></th>
             </tr>
           </thead>
@@ -80,10 +80,15 @@ export function Expenses() {
                 <tr key={exp.id} className="text-sm">
                   <td className="p-3">
                     <p className="font-bold text-[#1d3557] text-xs">{exp.item}</p>
-                    <p className="text-[9px] text-slate-400 font-medium">{exp.date} · {exp.country}</p>
+                    <p className="text-[9px] text-slate-400 font-medium">
+                      {exp.date} · {exp.country} · {exp.category}
+                    </p>
                   </td>
-                  <td className="p-3 text-right font-black text-slate-700 text-xs">
-                    {exp.currency === '유로' ? '€' : exp.currency === '원' ? '₩' : '₺'} {Number(exp.amount).toLocaleString()}
+                  <td className="p-3 text-right">
+                    <p className="font-black text-slate-700 text-xs">
+                      {exp.currency === '유로' ? '€' : exp.currency === '원' ? '₩' : '₺'} {Number(exp.amount).toLocaleString()}
+                    </p>
+                    <p className="text-[9px] text-[#e63946] font-bold">{exp.payment_method}</p>
                   </td>
                   <td className="p-3 text-right">
                     <button onClick={() => { if(confirm('삭제하시겠습니까?')) deleteExpense(exp.id) }} className="text-slate-300 hover:text-red-500">
@@ -104,7 +109,6 @@ export function Expenses() {
             <Calendar size={16} className="text-[#1d3557]" />
             <input 
               type="date" 
-              /* 모바일 줌 방지 및 캘린더 접근성 위해 text-sm 적용 */
               className="flex-1 p-2 text-sm border rounded-lg bg-slate-50 outline-none" 
               value={formData.date} 
               onChange={e => setFormData({...formData, date: e.target.value})} 
@@ -116,9 +120,13 @@ export function Expenses() {
               <option value="이스탄불">이스탄불</option>
               <option value="공통">공통</option>
             </select>
-            <select className="p-2 text-sm border rounded-lg bg-white" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
-              <option value="식비">식비</option><option value="숙소">숙소</option><option value="교통비">교통비</option>
-              <option value="항공권">항공권</option><option value="여행용품">여행용품</option><option value="기타">기타</option>
+            <select className="p-2 text-sm border rounded-lg bg-white" value={formData.payment_method} onChange={e => setFormData({...formData, payment_method: e.target.value})}>
+              <option value="한빛 개인">한빛 개인</option>
+              <option value="영설 개인">영설 개인</option>
+              <option value="트레블월렛">트레블월렛</option>
+              <option value="농협카드">농협카드</option>
+              <option value="현대카드">현대카드</option>
+              <option value="현금">현금</option>
             </select>
           </div>
           <input type="text" placeholder="결제 내역" className="w-full p-2 text-sm border rounded-lg bg-white" value={formData.item} onChange={e => setFormData({...formData, item: e.target.value})} />
