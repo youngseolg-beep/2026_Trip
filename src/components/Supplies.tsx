@@ -1,58 +1,51 @@
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useSupplies } from '../hooks/useSupplies';
 import { SupplyItem } from '../types';
 
+// 초기 데이터 (DB가 비어있을 때 참조용)
 const initialSupplies: SupplyItem[] = [
-  // 사전 준비 및 서류
   { id: 'prep-1', category: '사전준비/서류', detail: '아크로폴리스 티켓 (hhticket.gr)', packed: false },
   { id: 'prep-2', category: '사전준비/서류', detail: '신 아크로폴리스 박물관 티켓', packed: false },
   { id: 'prep-3', category: '사전준비/서류', detail: '여권 원본 (만료일 6개월 확인)', packed: false },
   { id: 'prep-4', category: '사전준비/서류', detail: '여권 사본 (분실 대비용)', packed: false },
   { id: 'prep-5', category: '사전준비/서류', detail: '항공권 E-티켓 (캡처/프린트)', packed: false },
   { id: 'prep-6', category: '사전준비/서류', detail: '숙소 바우처 (캡처/프린트)', packed: false },
-
-  // 결제 수단
   { id: 'pay-1', category: '결제 수단', detail: '트래블 카드 (월렛/로그)', packed: false },
   { id: 'pay-2', category: '결제 수단', detail: '현금 유로 (€)', packed: false },
   { id: 'pay-3', category: '결제 수단', detail: '현금 리라 (시내 환전용 유로)', packed: false },
-
-  // 의류 및 신발
   { id: 'wear-1', category: '의류/신발', detail: '가디건/셔츠 (일교차 대비)', packed: false },
   { id: 'wear-2', category: '의류/신발', detail: '얇은 바람막이 (비/바람 대비)', packed: false },
   { id: 'wear-3', category: '의류/신발', detail: '걷기 편한 운동화 (접지력 필수)', packed: false },
-
-  // 잡화 및 액세서리
   { id: 'acc-1', category: '잡화/액세서리', detail: '얇고 넓은 스카프 (사원 입장용)', packed: false },
   { id: 'acc-2', category: '잡화/액세서리', detail: '선글라스 & 선크림', packed: false },
   { id: 'acc-3', category: '잡화/액세서리', detail: '챙이 넓은 모자', packed: false },
-
-  // 세면 및 위생
   { id: 'san-1', category: '세면/위생', detail: '칫솔 & 치약 (호텔 미제공 대비)', packed: false },
   { id: 'san-2', category: '세면/위생', detail: '린스/트리트먼트 (석회수 대비)', packed: false },
-
-  // 상비약
   { id: 'med-1', category: '상비약', detail: '소화제 & 지사제 (물갈이 대비)', packed: false },
   { id: 'med-2', category: '상비약', detail: '진통제 & 밴드류', packed: false },
   { id: 'med-3', category: '상비약', detail: '멀미약 (산토리니 페리/요트용)', packed: false },
-
-  // 전자기기
   { id: 'elec-1', category: '전자기기', detail: '보조 배터리 & 충전 케이블', packed: false },
   { id: 'elec-2', category: '전자기기', detail: '멀티 어댑터 (돼지코)', packed: false },
   { id: 'elec-3', category: '전자기기', detail: '통합 유심 또는 eSIM (EU/튀르키예)', packed: false },
-
-  // 기타 필수품
   { id: 'etc-1', category: '기타 필수품', detail: '도난 방지 가방 (힙색/크로스백)', packed: false },
   { id: 'etc-2', category: '기타 필수품', detail: '휴대용 물통', packed: false },
   { id: 'etc-3', category: '기타 필수품', detail: '작은 3단 우산', packed: false },
 ];
 
 export function Supplies() {
-  const [supplies, setSupplies] = useLocalStorage<SupplyItem[]>('supplies', initialSupplies);
-  
-  const toggleItem = (id: string) => {
-    setSupplies(supplies.map(s => s.id === id ? { ...s, packed: !s.packed } : s));
-  };
+  // 이제 LocalStorage 대신 Supabase용 훅을 사용합니다.
+  const { supplies, toggleItem, loading } = useSupplies(initialSupplies);
 
-  const categories = Array.from(new Set(supplies.map(s => s.category)));
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-20">
+        <div className="text-[#1d3557] font-bold animate-pulse">데이터를 불러오는 중...</div>
+      </div>
+    );
+  }
+
+  // 불러온 데이터가 없을 경우를 대비한 방어 코드
+  const currentSupplies = supplies.length > 0 ? supplies : initialSupplies;
+  const categories = Array.from(new Set(currentSupplies.map(s => s.category)));
 
   return (
     <div className="space-y-6 pb-20">
@@ -62,7 +55,7 @@ export function Supplies() {
             {cat}
           </h3>
           <div className="grid grid-cols-1 gap-2">
-            {supplies.filter(s => s.category === cat).map(item => (
+            {currentSupplies.filter(s => s.category === cat).map(item => (
               <div 
                 key={item.id} 
                 onClick={() => toggleItem(item.id)}
