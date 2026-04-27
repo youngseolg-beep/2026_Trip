@@ -1,81 +1,81 @@
-import { useLocalStorage } from '../hooks/useLocalStorage';
-import { initialExpenses } from '../lib/data';
-import { Expense } from '../types';
-import { useState } from 'react';
-import { Trash2, Edit2, PlusCircle, Check } from 'lucide-react';
+import React, { useState } from 'react';
+import { useExpenses } from '../hooks/useExpenses';
+import { Plus, Trash2, CreditCard, Banknote } from 'lucide-react';
 
 export function Expenses() {
-  const [expenses, setExpenses] = useLocalStorage<Expense[]>('expenses', initialExpenses);
-  const [item, setItem] = useState('');
-  const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState<Expense['category']>('식비');
-  const [country, setCountry] = useState<Expense['country']>('공통');
-  const [paymentMethod, setPaymentMethod] = useState('카드');
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const { expenses, addExpense, deleteExpense, loading } = useExpenses();
+  const [isAdding, setIsAdding] = useState(false);
+  const [formData, setFormData] = useState({
+    date: new Date().toISOString().split('T')[0],
+    category: '식비',
+    item: '',
+    amount: '',
+    payment_method: '카드'
+  });
 
-  const total = expenses.reduce((sum, e) => sum + e.amount, 0);
-
-  const addOrUpdateExpense = () => {
-    if (!item || !amount) return;
-    if (editingId) {
-      setExpenses(expenses.map(e => e.id === editingId ? { ...e, item, amount: Number(amount), category, country, paymentMethod } : e));
-      setEditingId(null);
-    } else {
-      setExpenses([...expenses, {
-        id: Date.now().toString(),
-        date: new Date().toISOString().split('T')[0],
-        category,
-        country,
-        item,
-        amount: Number(amount),
-        paymentMethod,
-        isSettled: false
-      }]);
-    }
-    setItem(''); setAmount('');
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.item || !formData.amount) return;
+    
+    addExpense({
+      ...formData,
+      amount: Number(formData.amount)
+    });
+    
+    setFormData({ ...formData, item: '', amount: '' });
+    setIsAdding(false);
   };
 
-  const deleteExpense = (id: string) => setExpenses(expenses.filter(e => e.id !== id));
-  const editExpense = (e: Expense) => { setEditingId(e.id); setItem(e.item); setAmount(e.amount.toString()); setCategory(e.category); setCountry(e.country); };
+  const totalAmount = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
+
+  if (loading) return <div className="p-10 text-center animate-pulse">지출 내역 불러오는 중...</div>;
 
   return (
-    <div className="space-y-6">
-      <div className="bg-[#1d3557] text-[#e9c46a] p-6 rounded-3xl shadow-lg shadow-[#1d3557]/20">
-        <h2 className="text-sm uppercase tracking-widest opacity-80 font-medium">총 지출액</h2>
-        <p className="text-4xl font-bold font-serif mt-1">{total.toLocaleString()}원</p>
+    <div className="space-y-6 pb-24">
+      {/* 총액 카드 */}
+      <div className="bg-[#1d3557] p-6 rounded-3xl text-white shadow-xl">
+        <p className="text-blue-200 text-sm mb-1">총 지출 금액</p>
+        <h2 className="text-3xl font-bold">€ {totalAmount.toLocaleString()}</h2>
       </div>
 
-      <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
-        <input placeholder="항목명" value={item} onChange={e => setItem(e.target.value)} className="w-full bg-slate-50 p-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-[#1d3557]/20"/>
-        <input type="number" placeholder="금액 (원)" value={amount} onChange={e => setAmount(e.target.value)} className="w-full bg-slate-50 p-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-[#1d3557]/20"/>
-        <div className='flex gap-2'>
-            <select value={country} onChange={e => setCountry(e.target.value as any)} className="w-1/2 bg-slate-50 p-3 rounded-xl border border-slate-200 outline-none">
-                {["이스탄불", "산토리니", "아테네", "공통"].map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <select value={category} onChange={e => setCategory(e.target.value as any)} className="w-1/2 bg-slate-50 p-3 rounded-xl border border-slate-200 outline-none">
-            {["항공권", "숙박", "식비", "교통비", "여행용품", "기타"].map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-        </div>
-        <button onClick={addOrUpdateExpense} className="w-full bg-[#1d3557] text-[#e9c46a] p-3 rounded-2xl font-bold uppercase tracking-wider flex items-center justify-center gap-2">
-            {editingId ? <><Check size={18}/> 수정 완료</> : <><PlusCircle size={18}/> 추가하기</>}
-        </button>
-      </div>
-      
-      <div className='space-y-3'>
-        {expenses.map(e => (
-            <div key={e.id} className="bg-white border border-slate-100 p-4 rounded-2xl flex justify-between items-center shadow-sm">
-            <div>
-                <p className="font-bold text-slate-800">{e.item}</p>
-                <p className="text-[11px] text-slate-500 mt-0.5">{e.date} / {e.country} / {e.category} / {e.paymentMethod}</p>
+      {/* 지출 목록 */}
+      <div className="space-y-3">
+        {expenses.map((exp) => (
+          <div key={exp.id} className="bg-white p-4 rounded-2xl border border-slate-100 flex justify-between items-center shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="bg-slate-50 p-2 rounded-full text-slate-400">
+                {exp.payment_method === '카드' ? <CreditCard size={18} /> : <Banknote size={18} />}
+              </div>
+              <div>
+                <p className="font-bold text-[#1d3557]">{exp.item}</p>
+                <p className="text-xs text-slate-400">{exp.date} · {exp.category}</p>
+              </div>
             </div>
-            <div className='flex gap-2 items-center'>
-                <p className="font-bold text-[#1d3557] text-sm">{e.amount.toLocaleString()}원</p>
-                <button onClick={() => editExpense(e)} className='text-slate-400 hover:text-slate-600'><Edit2 size={16}/></button>
-                <button onClick={() => deleteExpense(e.id)} className='text-red-400 hover:text-red-600'><Trash2 size={16}/></button>
+            <div className="flex items-center gap-4">
+              <p className="font-bold text-[#e63946]">€ {Number(exp.amount).toLocaleString()}</p>
+              <button onClick={() => deleteExpense(exp.id)} className="text-slate-300 hover:text-red-500">
+                <Trash2 size={16} />
+              </button>
             </div>
-            </div>
+          </div>
         ))}
       </div>
+
+      {/* 추가 버튼 및 폼 */}
+      {isAdding ? (
+        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-3xl border-2 border-[#e9c46a] space-y-4 shadow-lg">
+          <input type="text" placeholder="항목 (예: 저녁 식사)" className="w-full p-3 bg-slate-50 rounded-xl outline-none" value={formData.item} onChange={e => setFormData({...formData, item: e.target.value})} />
+          <input type="number" placeholder="금액 (Euro)" className="w-full p-3 bg-slate-50 rounded-xl outline-none" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} />
+          <div className="flex gap-2">
+            <button type="submit" className="flex-1 bg-[#1d3557] text-white p-3 rounded-xl font-bold">저장</button>
+            <button type="button" onClick={() => setIsAdding(false)} className="flex-1 bg-slate-100 text-slate-500 p-3 rounded-xl font-bold">취소</button>
+          </div>
+        </form>
+      ) : (
+        <button onClick={() => setIsAdding(true)} className="fixed bottom-24 right-6 bg-[#e9c46a] text-[#1d3557] w-14 h-14 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform">
+          <Plus size={28} />
+        </button>
+      )}
     </div>
   );
 }
