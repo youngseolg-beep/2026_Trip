@@ -57,10 +57,11 @@ export function Itinerary() {
                       <input 
                         type="text" 
                         placeholder="Google Map URL"
-                        className="flex-1 text-[10px] p-2 bg-slate-50 rounded-lg outline-none"
+                        /* 모바일 자동 줌 방지를 위해 text-sm 적용 */
+                        className="flex-1 text-sm p-2 bg-slate-50 rounded-lg outline-none text-slate-600 placeholder:text-[10px]"
                         value={localMapUrls[item.id] || ''}
                         onChange={(e) => setLocalMapUrls({...localMapUrls, [item.id]: e.target.value})}
-                        onBlur={() => handleBlur(item.id)} // 입력 마치면 저장
+                        onBlur={() => handleBlur(item.id)}
                       />
                       {localMapUrls[item.id] && (
                         <a href={localMapUrls[item.id]} target="_blank" rel="noreferrer" className="p-2 bg-[#1d3557] rounded-lg text-white">
