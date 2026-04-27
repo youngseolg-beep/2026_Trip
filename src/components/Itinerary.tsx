@@ -1,8 +1,13 @@
 import { useItinerary } from '../hooks/useItinerary';
 import { MapPin, ExternalLink } from 'lucide-react';
 
-// 여행 데이터는 기존 lib/data.ts 것을 사용한다고 가정합니다.
-import { itineraryData as itinerary } from '../lib/data';
+// 혹시 모를 에러 방지를 위해 기본 일정 데이터를 여기서 바로 정의합니다.
+const staticItinerary = [
+  { id: 'day1', day: 'Day 1', title: '아테네 도착', content: '공항 도착 후 숙소 체크인 및 휴식' },
+  { id: 'day2', day: 'Day 2', title: '아테네 시내 관광', content: '아크로폴리스, 파르테논 신전 방문' },
+  { id: 'day3', day: 'Day 3', title: '산토리니 이동', content: '페리 타고 산토리니로 이동' },
+  // ... 필요하다면 일정을 더 추가하세요.
+];
 
 export function Itinerary() {
   const { itineraryData, updateItinerary } = useItinerary();
@@ -13,8 +18,7 @@ export function Itinerary() {
 
   return (
     <div className="space-y-8 pb-20">
-      {itinerary.map((item) => {
-        // DB에서 해당 일차의 map_url을 찾습니다.
+      {staticItinerary.map((item) => {
         const dbData = itineraryData.find(d => d.id === item.id);
         const currentMapUrl = dbData?.map_url || '';
 
