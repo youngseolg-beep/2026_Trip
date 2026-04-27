@@ -1,1 +1,18 @@
 @import "tailwindcss";
+/* index.css 맨 아래에 추가 */
+
+@media screen and (max-width: 768px) {
+  /* 모든 입력창의 기본 폰트를 16px로 강제해서 자동 줌 방지 */
+  input, 
+  select, 
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* 폰트가 너무 커서 디자인이 깨지는 게 싫다면 scale로 시각적 크기만 줄임 */
+  input[type="text"], 
+  input[type="number"],
+  select {
+    padding: 8px !important; /* 내부 여백 조절 */
+  }
+}
