@@ -1,7 +1,7 @@
 import { useSupplies } from '../hooks/useSupplies';
 import { SupplyItem } from '../types';
 
-// 초기 데이터 (DB가 비어있을 때 참조용)
+// 초기 데이터 (폴라로이드 항목 추가됨)
 const initialSupplies: SupplyItem[] = [
   { id: 'prep-1', category: '사전준비/서류', detail: '아크로폴리스 티켓 (hhticket.gr)', packed: false },
   { id: 'prep-2', category: '사전준비/서류', detail: '신 아크로폴리스 박물관 티켓', packed: false },
@@ -26,13 +26,16 @@ const initialSupplies: SupplyItem[] = [
   { id: 'elec-1', category: '전자기기', detail: '보조 배터리 & 충전 케이블', packed: false },
   { id: 'elec-2', category: '전자기기', detail: '멀티 어댑터 (돼지코)', packed: false },
   { id: 'elec-3', category: '전자기기', detail: '통합 유심 또는 eSIM (EU/튀르키예)', packed: false },
+  /* --- 폴라로이드 항목 추가 --- */
+  { id: 'elec-4', category: '전자기기', detail: '폴라로이드 카메라', packed: false },
+  { id: 'elec-5', category: '전자기기', detail: '폴라로이드 필름 (넉넉히)', packed: false },
+  /* -------------------------- */
   { id: 'etc-1', category: '기타 필수품', detail: '도난 방지 가방 (힙색/크로스백)', packed: false },
   { id: 'etc-2', category: '기타 필수품', detail: '휴대용 물통', packed: false },
   { id: 'etc-3', category: '기타 필수품', detail: '작은 3단 우산', packed: false },
 ];
 
 export function Supplies() {
-  // 이제 LocalStorage 대신 Supabase용 훅을 사용합니다.
   const { supplies, toggleItem, loading } = useSupplies(initialSupplies);
 
   if (loading) {
@@ -43,7 +46,6 @@ export function Supplies() {
     );
   }
 
-  // 불러온 데이터가 없을 경우를 대비한 방어 코드
   const currentSupplies = supplies.length > 0 ? supplies : initialSupplies;
   const categories = Array.from(new Set(currentSupplies.map(s => s.category)));
 
